@@ -1,56 +1,28 @@
-import { Controller, Post, Body, Get, Param, Patch, Delete, UseGuards, Headers } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Patch, Delete, UseGuards, Headers, Req, Res } from '@nestjs/common';
 import { MerchantService } from './merchant.service';
 import { Merchant } from '../DB/M_a.entity';
 import { CreateMerchantDTO } from '../DTOs/create.dto'
 import { AuthGuard } from '../authentication/auth.guard'
-
+import { Request, Response } from 'express';
+import { MailService, OtpService } from 'src/otp/OTP.service';
 
 @Controller('merchant')
 export class MerchantController {
-    constructor(private readonly merchantService: MerchantService) {}
+    constructor(
+      private readonly merchantService: MerchantService,
+      private readonly otpService: OtpService,
+      private readonly mailService: MailService
+    ) {}
 
-  // Create new merchant
-  // @Post("/add")
-  // async create(@Body() merchantData: Partial<Merchant>): Promise<Merchant> {
-  //   return this.merchantService.createMerchant(merchantData);
-  // }
 
-  // @Post("/add")
-  // createMerchant(@Body() data)
-  // {
-  //   return this.merchantService.createMerchant(data)
-  // }
+  
 
-  // Get all merchants
-  //@Get("/getAllMarchent")
-  // async findAll(): Promise<Merchant[]> {
-  //   return this.merchantService.getMerchants();
-  // }
-  // findAll(){
-  //   return this.merchantService.getMerchants()
-  // }
-
-  // Get merchant by id
-  // @Get('/getMerchent/:id')
-  // async findOne(@Param('id') id: number): Promise<Merchant> {
-  //   return this.merchantService.getMerchantById(id);
-  // }
-
-  // Update merchant status
- /* @Patch('/updateMarchent/:id/status')
-  async updateStatus(@Param('id') id: number, @Body() statusData: { isActive: boolean }): Promise<Merchant> {
-    return this.merchantService.updateMerchantStatus(id, statusData.isActive);
-  }*/
-
-    @Post("/add")
-  create(@Body() Merchant: CreateMerchantDTO) {
-    return this.merchantService.create(Merchant);
+  @Post("/add")
+  create(@Body() Merchant: {name: string, email: string, phoneNumber: string, address: string, balance: number, password: string}) {
+    return this.merchantService.create(Merchant.name, Merchant.email, Merchant.phoneNumber, Merchant.address, Merchant.balance,Merchant.password);
   }
 
-  //   @Post("/add")
-  // create(@Body() merchant: Partial<Merchant>) {
-  //   return this.merchantService.create(merchant);
-  // }
+
 
   @Get("/getAll")
   findAll() {
@@ -74,10 +46,7 @@ export class MerchantController {
     return this.merchantService.remove(id);
   }
 
-  // @Get('/transaction/:id')
-  // getAccountDetails(@Param('id') id: number) {
-  //   return this.merchantService.getAccountDetails(id);
-  // }
+
 
   @UseGuards(AuthGuard)
   @Post('/transaction/:id/deposit')
@@ -108,16 +77,79 @@ export class MerchantController {
   }
 
 
-  // Login Route: Generate a token
   @Post('/login')
-  login(@Body('id') id: number) {
-    return this.merchantService.login(id);
+  async login(
+    @Body() body: {id: number, password: string},
+    @Req() req: Request,
+    @Res() res: Response,
+
+  ) 
+  {
+    const u = await this.merchantService.login(body.id,body.password);
+
+    if (u)
+    {
+      req.session.u = u;
+      return res.send('Login successful');
+    }
+
+    return res.status(401).send('Invalid');
   }
 
-  // Logout Endpoint
   @Post('/logout/:id')
-  logout(@Param('id') id: number) {
-    return this.merchantService.logout(id);
+  logout(
+    @Param('id') id: number,
+    @Req() req: Request,
+    @Res() res: Response
+  ) 
+  {
+    //if(req.session.merchantService.loginRepo.id === id)
+    //{
+      //req.session.destroy((err) => {
+        if(req.session.destroy()){
+          
+          this.merchantService.logout(id);
+          res.clearCookie('connect.sid');
+          return res.send('logout successful');
+          //return res.status(500).send("error logout");
+        }
+        // res.clearCookie('connect.sid');
+        // return res.send('logout successful');
+      //});
+   // }
+    else{
+      return res.status(400).send('no active session found');
+    }
+    //return this.merchantService.logout(id);
+  }
+
+
+  @Post('/forgot_password')
+  async forgotPassword(@Body('email') email: string): Promise<string> {
+    const otp = this.otpService.generateOtp();
+    this.otpService.storeOtp(email, otp);
+
+    // Send OTP via email
+    await this.mailService.sendOtp(email, otp);
+
+    return 'OTP sent to your email. It will expire in 10 minutes.';
+  }
+
+  @Post('/reset_password')
+  async resetPassword(
+    @Body('email') email: string,
+    @Body('otp') otp: string,
+    @Body('newPassword') newPassword: string,
+  ): Promise<string> {
+    // Verify OTP
+    const isOtpValid = this.otpService.verifyOtp(email, otp);
+
+    if (!isOtpValid) {
+      return 'Invalid or expired OTP. Please try again.';
+    }
+
+
+    return 'Password reset successful.';
   }
 }
 

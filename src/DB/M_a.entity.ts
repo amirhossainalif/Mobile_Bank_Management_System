@@ -1,3 +1,4 @@
+import { IsEmail, IsNotEmpty, IsString, Matches } from 'class-validator';
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
@@ -12,7 +13,7 @@ export class Merchant {
   email: string;
 
   @Column()
-  phone: string;
+  phoneNumber: string;
 
   @Column()
   address: string;
@@ -20,8 +21,5 @@ export class Merchant {
 
   @Column({ default: 0 })
   balance: number;
-
-  @Column({ nullable: true })
-  token: string;
 
 }

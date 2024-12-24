@@ -7,7 +7,7 @@ export class Transaction {
   id: number;
 
   @Column()
-  type: 'deposit' | 'withdrawal' | 'transfer';
+  type: 'deposit' | 'withdrawal' | 'transfer' ;
 
   @Column({ type: 'numeric' })
   amount: number;

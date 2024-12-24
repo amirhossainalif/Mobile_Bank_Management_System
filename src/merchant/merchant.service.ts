@@ -5,6 +5,9 @@ import { Merchant } from '../DB/M_a.entity';
 import { CreateMerchantDTO } from '../DTOs/create.dto'
 import { Transaction } from '../DB/transaction.entity'
 import { v4 as uuidv4 } from 'uuid';
+import { Login } from '../DB/Login.entity'
+import { LoginMerchantDTO } from '../DTOs/login.dto'
+import { promises } from 'dns';
 
 @Injectable()
 export class MerchantService {
@@ -14,63 +17,34 @@ export class MerchantService {
 
         @InjectRepository(Transaction)
         private transactionRepo: Repository<Transaction>,
+
+        @InjectRepository(Login)
+        private loginRepo: Repository<Login>
     ){}
 
-    
+    async create(name: string, email: string, phoneNumber: string, address: string, balance: number, password: string): Promise<Merchant> {
+      //const merchant = this.merchentRepo.create(Merchant);
+      //const login = this.loginRepo.create(Login)
+      const merchant = new Merchant();
+      merchant.name = name;
+      merchant.email = email;
+      merchant.phoneNumber = phoneNumber;
+      merchant.address = address;
+      merchant.balance = balance;
+      
+      const saveuser = await this.merchentRepo.save(merchant);
 
-    
-   // private merch =[]
-     // Create a new merchant
-  /*async createMerchant(merchantData: Partial<Merchant>): Promise<Merchant> {
-    const newMerchant = this.merchentRepo.create(merchantData);
-    return this.merchentRepo.save(newMerchant);
-  }*/
+      const login = new Login();
+      login.password = password;
 
-    // createMerchant(Data)
-    // {
-    //   this.merch.push(Data)
-    //   return {message: "Data inserted", Data}
-    // }
+      await this.loginRepo.save(login);
 
-  // Get all merchants
-  // async getMerchants(): Promise<Merchant[]> {
-  //   return this.merchentRepo.find();
-  // }
-
-  // getMerchants()
-  // {
-  //   return this.merch
-  // }
-
-  // Get a merchant by id
-  // async getMerchantById(id: number): Promise<Merchant> {
-  //   return this.merchentRepo.findOne({ where: { id } });
-  // }
-
-  // Update merchant status
-  /*async updateMerchantStatus(id: number, isActive: boolean): Promise<Merchant> {
-    const merchant = await this.merchentRepo.findOne({ where: { id } });
-    if (!merchant) {
-      throw new Error('Merchant not found');
-    }
-    merchant.isActive = isActive;
-    return this.merchentRepo.save(merchant);
-  }*/
-
-
-
-    create(Merchant: CreateMerchantDTO): Promise<Merchant> {
-      const merchant = this.merchentRepo.create(Merchant);
-      return this.merchentRepo.save(merchant);
+      return saveuser;
     }
 
 
-    // create(merchant: Partial<Merchant>) {
-    //   return this.merchentRepo.save(merchant);
-    // }
-  
     findAll() {
-      return this.merchentRepo.find();
+      return this.loginRepo.find();
     }
   
     findOne(id: number) {
@@ -148,35 +122,30 @@ export class MerchantService {
     return this.transactionRepo.find({ where: { merchant: { id: merchantId } } });
   }
 
-  // Merchant Login: Generate and return a token
-  async login(merchantId: number) {
-    const merchant = await this.merchentRepo.findOne({ where: { id: merchantId } });
-    if (!merchant) 
-      throw new UnauthorizedException('Invalid credentials');
-    merchant.token = uuidv4(); 
-    await this.merchentRepo.save(merchant);
-    return { message: 'Login successful', token: merchant.token, merchant };
+  async login(id: number, password: string) {
+    const login = await this.loginRepo.findOne({ where: { id: id, password: password } });
+    if (!login) {
+      throw new UnauthorizedException('Invalid user');
+    }
+    login.token = uuidv4(); 
+    const t = await this.loginRepo.save(login);
+    return  { message: 'Login successfull', t};
   }
 
   async logout( id: number) {
-    const merchant = await this.merchentRepo.findOne({ where: { id } });
+    const merchant = await this.loginRepo.findOne({ where: { id } });
 
     if (!merchant) {
       throw new UnauthorizedException('Invalid token or already logged out');
     }
 
-    merchant.token = null; // Clear the token
-    const m = await this.merchentRepo.save(merchant);
+    merchant.token = null; 
+    const m = await this.loginRepo.save(merchant);
 
     return { message: 'Logout successful', m };
   }
 
-  // async generateToken(merchantId: number) {
-  //   const merchant = await this.merchentRepo.findOne({ where:  { id: merchantId } });
-  //   if (!merchant) throw new NotFoundException('Merchant not found');
 
-    
-  // }
 
 
 }
