@@ -62,7 +62,7 @@ Ensure you have the following installed:
 
 
 ## Contributors
-- Your Name - [GitHub Profile](https://github.com/amirhossainalif)
+- Md. Amir Hossain Alif - [GitHub Profile](https://github.com/amirhossainalif)
 
 ## Contact
 For any inquiries, feel free to reach out:
