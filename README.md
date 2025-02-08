@@ -4,12 +4,13 @@
 The **Mobile Bank Management System** is a web-based application that allows merchants to manage their banking transactions efficiently. The system enables merchants to create accounts, log in securely, transfer money between authorized merchants, and track transaction history.
 
 ## Features
-- **Merchant Registration**: Merchants can create an account.
+- **Merchant Registration**: New Merchants can create an account.
 - **Secure Authentication**: Authorized merchants can log in using JWT-based authentication.
 - **Money Transfer**: Authorized merchants can transfer money to other authorized merchants.
 - **Transaction History**: Merchants can view and filter transaction history by date.
 - **Downloadable Reports**: Merchants can download transaction history.
 - **Chart Representation**: Merchants can view sent receipts in a graphical chart.
+- **Profile Management**: Merchants can update their profile details.
 
 ## Technologies Used
 - **Backend**: [NestJS](https://nestjs.com/) (Node.js framework for scalable applications)
@@ -59,7 +60,16 @@ Ensure you have the following installed:
 3. Transfer money to other authorized merchants.
 4. View and download transaction history.
 5. Check transaction summaries in the chart view.
+6. Merchants can modify their account details.
 
+## API Endpoints (Example)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/auth/register` | POST | Register a new merchant |
+| `/auth/login` | POST | Login and receive a JWT token |
+| `/merchant/transfer` | POST | Transfer money to another merchant |
+| `/merchant/transactions` | GET | Get transaction history with filters |
+| `/merchant/profile` | PATCH | Update merchant profile |
 
 ## Contributors
 - Md. Amir Hossain Alif - [GitHub Profile](https://github.com/amirhossainalif)
